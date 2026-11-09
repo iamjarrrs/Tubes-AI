@@ -1,0 +1,56 @@
+{
+  "domain": "dropped_item_recovery",
+  "version": 1,
+  "state_predicates": [
+    "at_start",
+    "at_item",
+    "item_available",
+    "has_item",
+    "item_used",
+    "at_mc"
+  ],
+  "heuristic": "count_unsatisfied_goals",
+  "actions": [
+    {
+      "name": "move_to_chest",
+      "description": "Navigate to the current map position of the selected dropped potion or item; the action name is retained for plan compatibility.",
+      "parameters": [{"name": "item", "type": "map_item"}],
+      "precondition": ["at_start", "item_available"],
+      "effect": {
+        "add": ["at_item"],
+        "del": ["at_start"]
+      },
+      "cost": 1
+    },
+    {
+      "name": "take_item",
+      "parameters": [{"name": "item", "type": "map_item"}],
+      "precondition": ["at_item", "item_available"],
+      "effect": {
+        "add": ["has_item"],
+        "del": ["item_available"]
+      },
+      "cost": 1
+    },
+    {
+      "name": "use_item",
+      "parameters": [{"name": "item", "type": "map_item"}],
+      "precondition": ["at_item", "has_item"],
+      "effect": {
+        "add": ["item_used"],
+        "del": ["has_item"]
+      },
+      "cost": 1
+    },
+    {
+      "name": "move_to_mc",
+      "parameters": [],
+      "precondition": ["at_item", "item_used"],
+      "effect": {
+        "add": ["at_mc"],
+        "del": ["at_item"]
+      },
+      "cost": 1
+    }
+  ]
+}
