@@ -1,0 +1,39 @@
+{
+  "rules": [
+    {
+      "id": "fallback_no_buff_available",
+      "priority": 1000,
+      "if": ["need_buff", "chest_unavailable"],
+      "then": "GOAL_Direct_Engage",
+      "desc": "Prioritas fallback: peti atau item buff tidak tersedia, NPC dialihkan langsung menyerang."
+    },
+    {
+      "id": "npc_loses_element",
+      "priority": 400,
+      "if": ["element_disadvantage"],
+      "then": "need_buff",
+      "desc": "NPC kalah kecocokan elemen terhadap MC."
+    },
+    {
+      "id": "npc_lower_effective_damage",
+      "priority": 300,
+      "if": ["effective_damage_disadvantage"],
+      "then": "need_buff",
+      "desc": "Damage efektif NPC lebih kecil atau tidak aman dibanding MC."
+    },
+    {
+      "id": "seek_buff_from_element_disadvantage",
+      "priority": 250,
+      "if": ["need_buff", "chest_available"],
+      "then": "GOAL_Seek_Buff",
+      "desc": "NPC membutuhkan buff dan peti/item masih tersedia."
+    },
+    {
+      "id": "npc_safe_to_engage",
+      "priority": 200,
+      "if": ["element_advantage_or_equal", "effective_damage_advantage_or_equal"],
+      "then": "GOAL_Direct_Engage",
+      "desc": "NPC unggul atau setara elemen dan damage efektif; NPC boleh menyerang langsung."
+    }
+  ]
+}
