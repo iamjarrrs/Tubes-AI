@@ -1,7 +1,7 @@
 [gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/element_selection_ui.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://map/map_aqua.jpg" id="2_sea"]
+[ext_resource type="Texture2D" path="res://assets/maps/map_aqua.jpg" id="2_sea"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_panel"]
 

@@ -1,9 +1,9 @@
 extends CanvasLayer
 
 const MAPS := [
-	{"name": "Aqua", "path": "res://map_aqua.tscn", "preview": "res://map/map_aqua.jpg", "description": "Dunia bawah laut"},
-	{"name": "Forest", "path": "res://map_forest.tscn", "preview": "res://map/map_forest.jpg", "description": "Hutan yang rimbun"},
-	{"name": "Volcano", "path": "res://map_volcano.tscn", "preview": "res://map/map_volcano.jpg", "description": "Gunung berapi"}
+	{"name": "Aqua", "path": "res://scenes/maps/map_aqua.tscn", "preview": "res://assets/maps/map_aqua.jpg", "description": "Dunia bawah laut"},
+	{"name": "Forest", "path": "res://scenes/maps/map_forest.tscn", "preview": "res://assets/maps/map_forest.jpg", "description": "Hutan yang rimbun"},
+	{"name": "Volcano", "path": "res://scenes/maps/map_volcano.tscn", "preview": "res://assets/maps/map_volcano.jpg", "description": "Gunung berapi"}
 ]
 
 var player: CharacterBody2D

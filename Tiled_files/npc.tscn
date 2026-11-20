@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://dmqu6pqw3tl5e"]
 
 [ext_resource type="Script" uid="uid://bkdbhhpdrv5q2" path="res://Tiled_files/npc.gd" id="1_d8jyi"]
-[ext_resource type="Texture2D" uid="uid://ckbhbf5jmm2co" path="res://Player/Vampires2_Walk_with_shadow.png" id="1_yecec"]
+[ext_resource type="Texture2D" uid="uid://ckbhbf5jmm2co" path="res://assets/characters/Vampires2_Walk_with_shadow.png" id="1_yecec"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_d8jyi"]
 atlas = ExtResource("1_yecec")

@@ -11,14 +11,14 @@ var initial_state := {
 }
 ```
 
-Pass the KB Engine goal as a `String`: one predicate (for example, `at_mc`) or a conjunction separated by `AND`, `&&`, or commas (for example, `item_used AND at_mc`). Predicate names are case-insensitive.
+Pass the KB Engine goal as a `String`. The planner accepts `GOAL_Seek_Buff` and expands it to `item_used AND at_mc`; `GOAL_Direct_Engage` maps to `at_mc`. It also accepts state predicates directly, joined by `AND`, `&&`, or commas. Goal and predicate names are case-insensitive.
 
 ```gdscript
 var planner = load("res://scripts/ai/automated_planner.gd").new()
-var actions: Array[String] = planner.update_request(initial_state, "item_used AND at_mc")
+var actions: Array[String] = planner.update_request(initial_state, "GOAL_Seek_Buff")
 ```
 
-`request_plan(state, goal)` always invalidates the stored plan and searches again. `update_request(latest_state, latest_goal)` compares the supplied state and goal with the last request; it invalidates and searches again when either changes, and otherwise returns a copy of the current plan. Anggota 3 should call `update_request` when map facts or the KB goal change, including when the selected item's position changes in `context`. `invalidate_plan()` clears the stored result explicitly. Successful results are action names such as `["move_to_chest", "take_item", "use_item", "move_to_mc"]`; an already-satisfied goal also returns an empty array.
+`request_plan(state, goal)` always invalidates the stored plan and searches again. `update_request(latest_state, latest_goal)` compares the supplied state and goal with the last request; it invalidates and searches again when either changes, and otherwise returns a copy of the current plan. Anggota 3 should call `update_request` when map facts or the KB goal change, including when the selected item's position changes in `context`. `invalidate_plan()` clears the stored result explicitly. Successful results are action names such as `["move_to_chest", "take_item", "use_item", "move_to_mc"]` for `GOAL_Seek_Buff` and `["move_to_mc"]` for `GOAL_Direct_Engage` from `at_start`; an already-satisfied goal returns an empty array.
 
 Check `last_status` to distinguish an empty successful plan (`success`) from failure: `unknown_goal` for malformed or unrecognized goals, `unreachable` for valid goals with no applicable path, `invalid_initial_state` for malformed/unknown state predicates, and `domain_error` if the JSON schema cannot be loaded. Failure results are always an empty `Array[String]`; `last_error` gives a short explanation. `plan_revision` increases whenever a plan is invalidated/requested.
 

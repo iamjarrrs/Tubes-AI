@@ -393,11 +393,11 @@ func _total_stats(loadout: Dictionary, base_stats: Dictionary) -> Dictionary:
 
 func _map_texture() -> Texture2D:
 	var map_name := str(game_state.selected_map).to_lower()
-	var path := "res://map/map_aqua.jpg"
+	var path := "res://assets/maps/map_aqua.jpg"
 	if map_name.contains("forest"):
-		path = "res://map/map_forest.jpg"
+		path = "res://assets/maps/map_forest.jpg"
 	elif map_name.contains("volcano"):
-		path = "res://map/map_volcano.jpg"
+		path = "res://assets/maps/map_volcano.jpg"
 	return load(path) as Texture2D
 
 func _label(text: String, font_size: int, color: Color) -> Label:

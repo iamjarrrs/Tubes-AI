@@ -1,0 +1,49 @@
+[gd_scene format=3 uid="uid://brxursbfag6yb"]
+
+[ext_resource type="Texture2D" uid="uid://bhelx70h62afb" path="res://assets/maps/map_volcano.jpg" id="1_ktuiv"]
+[ext_resource type="PackedScene" uid="uid://gg00k7v2n4s0" path="res://Tiled_files/player.tscn" id="2_n3eq4"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_lmlx3"]
+size = Vector2(273, 769.5)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_gjg82"]
+size = Vector2(1341.5, 166.5)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_e0nl0"]
+size = Vector2(110, 59)
+
+[node name="MapVolcano" type="Node2D" unique_id=161515389]
+
+[node name="MapVolcano" type="Sprite2D" parent="." unique_id=148884839]
+position = Vector2(669, 379)
+texture = ExtResource("1_ktuiv")
+
+[node name="Player" parent="." unique_id=450160347 instance=ExtResource("2_n3eq4")]
+position = Vector2(330, 373)
+scale = Vector2(1.5, 1.5)
+
+[node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=172972943]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D" unique_id=376847381]
+position = Vector2(135.5, 380)
+shape = SubResource("RectangleShape2D_lmlx3")
+
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="StaticBody2D" unique_id=1701281622]
+position = Vector2(1204, 378.75)
+shape = SubResource("RectangleShape2D_lmlx3")
+
+[node name="CollisionShape2D3" type="CollisionShape2D" parent="StaticBody2D" unique_id=469912302]
+position = Vector2(669.75, 77.75)
+shape = SubResource("RectangleShape2D_gjg82")
+
+[node name="CollisionShape2D4" type="CollisionShape2D" parent="StaticBody2D" unique_id=654084145]
+position = Vector2(671, 680)
+shape = SubResource("RectangleShape2D_gjg82")
+
+[node name="CollisionShape2D5" type="CollisionShape2D" parent="StaticBody2D" unique_id=77815944]
+position = Vector2(231, 371.5)
+shape = SubResource("RectangleShape2D_e0nl0")
+
+[node name="CollisionShape2D6" type="CollisionShape2D" parent="StaticBody2D" unique_id=202522364]
+position = Vector2(1111, 368)
+shape = SubResource("RectangleShape2D_e0nl0")

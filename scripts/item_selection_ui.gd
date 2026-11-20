@@ -37,11 +37,11 @@ func _ready() -> void:
 
 func _set_map_background() -> void:
 	var selected_map: String = str(game_state.get("selected_map")).to_lower()
-	var background_path := "res://map/map_aqua.jpg"
+	var background_path := "res://assets/maps/map_aqua.jpg"
 	if selected_map.contains("forest"):
-		background_path = "res://map/map_forest.jpg"
+		background_path = "res://assets/maps/map_forest.jpg"
 	elif selected_map.contains("volcano"):
-		background_path = "res://map/map_volcano.jpg"
+		background_path = "res://assets/maps/map_volcano.jpg"
 	$MapBackground.texture = load(background_path)
 
 func _add_item_card(item_name: String, index: int) -> void:
@@ -131,7 +131,17 @@ func _get_artwork_path(item_name: String) -> String:
 	var file_name := item_name
 	if item_name == "Berserker Amulet":
 		file_name = "Berseker Amulet"
-	var path := "res://%s/%s.jpg" % [category.capitalize(), file_name]
+	var category_directory := ""
+	match category:
+		"weapon":
+			category_directory = "equipment/weapons"
+		"armor":
+			category_directory = "equipment/armor"
+		"accessory":
+			category_directory = "equipment/accessories"
+		_:
+			return ""
+	var path := "res://assets/%s/%s.jpg" % [category_directory, file_name]
 	return path if ResourceLoader.exists(path) else ""
 
 func _get_item_color(item_name: String) -> Color:

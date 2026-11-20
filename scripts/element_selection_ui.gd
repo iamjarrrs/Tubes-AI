@@ -21,7 +21,7 @@ func _ready() -> void:
 		_style_card(card, ELEMENT_COLORS[element])
 
 func _add_element_artwork(card: Button, element: String) -> void:
-	var texture_path := "res://Elemen/%s.jpg" % element.to_lower()
+	var texture_path := "res://assets/elements/%s.jpg" % element.to_lower()
 	if not ResourceLoader.exists(texture_path):
 		return
 	card.text = ""
@@ -54,11 +54,11 @@ func _add_element_artwork(card: Button, element: String) -> void:
 
 func _set_map_background() -> void:
 	var selected_map: String = str(game_state.get("selected_map")).to_lower()
-	var background_path := "res://map/map_aqua.jpg"
+	var background_path := "res://assets/maps/map_aqua.jpg"
 	if selected_map.contains("forest"):
-		background_path = "res://map/map_forest.jpg"
+		background_path = "res://assets/maps/map_forest.jpg"
 	elif selected_map.contains("volcano"):
-		background_path = "res://map/map_volcano.jpg"
+		background_path = "res://assets/maps/map_volcano.jpg"
 	$MapBackground.texture = load(background_path)
 
 func _style_card(card: Button, accent: Color) -> void:

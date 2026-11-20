@@ -45,10 +45,10 @@
     {
       "name": "move_to_mc",
       "parameters": [],
-      "precondition": ["at_item", "item_used"],
+      "precondition_any": [["at_start"], ["at_item"]],
       "effect": {
         "add": ["at_mc"],
-        "del": ["at_item"]
+        "del": ["at_start", "at_item"]
       },
       "cost": 1
     }

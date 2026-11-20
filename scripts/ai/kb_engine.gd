@@ -90,13 +90,24 @@ func ask(query: String = "GOAL") -> String:
 				fact_base.append(conclusion)
 				changed = true
 
-	if fact_base.has("GOAL_Direct_Engage"):
-		last_answer = "GOAL_Direct_Engage"
-	elif fact_base.has("GOAL_Seek_Buff"):
-		last_answer = "GOAL_Seek_Buff"
+	var inferred_goal := _select_goal_from_rules()
+	var requested_goal := last_query.to_upper()
+	if requested_goal == "GOAL":
+		last_answer = inferred_goal
+	elif requested_goal == inferred_goal.to_upper():
+		last_answer = inferred_goal
 	else:
-		last_answer = "GOAL_Direct_Engage"
+		last_answer = ""
 	return last_answer
+
+func _select_goal_from_rules() -> String:
+	for rule in _rules:
+		var conclusion := str(rule.get("then", ""))
+		if not conclusion.begins_with("GOAL_"):
+			continue
+		if _premises_match(rule.get("if", [])):
+			return conclusion
+	return "GOAL_Direct_Engage"
 
 func get_facts() -> Array[String]:
 	return fact_base.duplicate()

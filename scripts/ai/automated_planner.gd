@@ -32,15 +32,15 @@ func request_plan(initial_state: Dictionary, goal: String) -> Array[String]:
 	if not _domain_error.is_empty():
 		return _fail(STATUS_DOMAIN_ERROR, _domain_error)
 
-	var normalized_state := _normalize_initial_state(initial_state)
+	var normalized_state: Variant = _normalize_initial_state(initial_state)
 	if normalized_state == null:
 		return _fail(STATUS_INVALID_INITIAL_STATE, "Expected a predicates array containing known state predicates.")
 
-	var goal_predicates := _parse_goal(goal)
+	var goal_predicates: Variant = _parse_goal(goal)
 	if goal_predicates == null:
 		return _fail(STATUS_UNKNOWN_GOAL, "Goal must contain one or more known predicates joined by AND, &&, or commas.")
 
-	var result := _search(normalized_state, goal_predicates)
+	var result: Variant = _search(normalized_state, goal_predicates)
 	if result == null:
 		return _fail(STATUS_UNREACHABLE, "No reachable state satisfies the requested goal.")
 
@@ -50,7 +50,7 @@ func request_plan(initial_state: Dictionary, goal: String) -> Array[String]:
 	return current_plan.duplicate()
 
 func update_request(initial_state: Dictionary, goal: String) -> Array[String]:
-	var normalized_state := _normalize_initial_state(initial_state)
+	var normalized_state: Variant = _normalize_initial_state(initial_state)
 	var normalized_goal := goal.strip_edges().to_lower()
 	if _has_last_request and normalized_state != null and initial_state == _last_request_state and normalized_goal == _last_request_goal:
 		return current_plan.duplicate()
@@ -104,21 +104,39 @@ func _load_domain() -> void:
 
 	for action_variant in action_list:
 		if not action_variant is Dictionary or not _is_valid_action(action_variant):
-			_domain_error = "Every action must define name, parameters, precondition, effect.add, effect.del, and a positive cost."
+			_domain_error = "Every action must define name, parameters, preconditions, effect.add, effect.del, and a positive cost."
 			return
 		_actions.append(action_variant)
 
 func _is_valid_action(action: Dictionary) -> bool:
 	if not action.get("name", "") is String or not action.get("parameters", null) is Array:
 		return false
-	if not action.get("precondition", null) is Array or not action.get("effect", null) is Dictionary:
+	var preconditions: Variant = action.get("precondition", null)
+	var alternatives: Variant = action.get("precondition_any", null)
+	if preconditions != null and not preconditions is Array:
+		return false
+	if alternatives != null and (not alternatives is Array or alternatives.is_empty()):
+		return false
+	if preconditions == null and alternatives == null:
+		return false
+	if not action.get("effect", null) is Dictionary:
 		return false
 	var effect: Dictionary = action["effect"]
 	if not effect.get("add", null) is Array or not effect.get("del", null) is Array:
 		return false
 	if int(action.get("cost", 0)) <= 0:
 		return false
-	for predicate in action["precondition"] + effect["add"] + effect["del"]:
+	var predicates_to_validate: Array = []
+	if preconditions is Array:
+		predicates_to_validate.append_array(preconditions)
+	if alternatives is Array:
+		for alternative in alternatives:
+			if not alternative is Array:
+				return false
+			predicates_to_validate.append_array(alternative)
+	predicates_to_validate.append_array(effect["add"])
+	predicates_to_validate.append_array(effect["del"])
+	for predicate in predicates_to_validate:
 		if not predicate is String or not _valid_predicates.has(str(predicate)):
 			return false
 	return true
@@ -145,6 +163,13 @@ func _parse_goal(goal: String) -> Variant:
 	var goals: Array[String] = []
 	for token in normalized_text.split(" and ", false):
 		var predicate := token.strip_edges()
+		if predicate == "goal_seek_buff":
+			for mapped_goal in ["item_used", "at_mc"]:
+				if not goals.has(mapped_goal):
+					goals.append(mapped_goal)
+			continue
+		if predicate == "goal_direct_engage":
+			predicate = "at_mc"
 		if predicate.is_empty() or not _valid_predicates.has(predicate):
 			return null
 		if not goals.has(predicate):
@@ -212,8 +237,23 @@ func _satisfies_goal(state: Array[String], goals: Array[String]) -> bool:
 	return true
 
 func _is_applicable(action: Dictionary, state: Array[String]) -> bool:
-	for predicate in action["precondition"]:
+	var preconditions: Array = action.get("precondition", [])
+	for predicate in preconditions:
 		if not state.has(str(predicate)):
+			return false
+	var alternatives: Variant = action.get("precondition_any", null)
+	if alternatives is Array:
+		var has_applicable_alternative := false
+		for alternative in alternatives:
+			var alternative_matches := true
+			for predicate in alternative:
+				if not state.has(str(predicate)):
+					alternative_matches = false
+					break
+			if alternative_matches:
+				has_applicable_alternative = true
+				break
+		if not has_applicable_alternative:
 			return false
 	return true
 
