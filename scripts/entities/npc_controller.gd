@@ -31,6 +31,7 @@ var battle_prompt: CanvasLayer
 var prompt_title_label: Label
 var prompt_subtitle_label: Label
 var npc_sought_buff := false
+var npc_buff_used := false
 
 func _ready() -> void:
 	map_root = get_parent() as Node2D
@@ -93,12 +94,14 @@ func _replan(reason: String) -> void:
 	if transition_started:
 		return
 
+	npc_buff_used = false
 	var percepts := _build_percepts()
 	kb_engine.tell(percepts)
+	var previous_goal := goal_answer
 	goal_answer = kb_engine.ask("GOAL")
 
-	if goal_answer == "GOAL_Seek_Buff":
-		npc_sought_buff = true
+	if previous_goal != goal_answer:
+		npc_sought_buff = goal_answer == "GOAL_Seek_Buff"
 
 	var goal := "item_used AND at_mc" if goal_answer == "GOAL_Seek_Buff" else "at_mc"
 
@@ -200,16 +203,12 @@ func _execute_instant_action(action_name: String) -> void:
 		if not item_available or not is_instance_valid(buff_item):
 			_replan("Item diambil MC sebelum NPC")
 			return
-		item_available = false
-		has_npc_buff = true
 		if is_instance_valid(buff_item):
 			buff_item.collect(npc)
-		_update_predicates(["has_item"], ["item_available"])
-		plan_index += 1
-		_run_next_step()
 	elif action_name == "use_item":
 		if has_npc_buff:
 			has_npc_buff = false
+			npc_buff_used = true
 			game_state.npc_base_stats["attack"] = int(game_state.npc_base_stats.get("attack", 30)) + 10
 		_update_predicates(["item_used"], ["has_item"])
 
@@ -238,9 +237,9 @@ func _on_item_collected(by: Node) -> void:
 	if by == npc or (is_instance_valid(by) and by.name == "BattleNPC"):
 		if not has_npc_buff:
 			has_npc_buff = true
-			game_state.npc_base_stats["attack"] = int(game_state.npc_base_stats.get("attack", 30)) + 10
-			_update_predicates(["has_item", "item_used"], ["item_available"])
-			_standby_after_buff()
+			_update_predicates(["has_item"], ["item_available"])
+			plan_index += 1
+			_run_next_step()
 		return
 
 	# Jika MC (Player) yang mengambil buff:
@@ -290,7 +289,7 @@ func _build_percepts() -> Dictionary:
 		"npc_element": npc_elem,
 		"mc_stats": mc_stats,
 		"npc_stats": npc_stats,
-		"chest_available": item_available or has_npc_buff
+		"chest_available": item_available
 	}
 
 func _total_stats(loadout: Dictionary, base_stats: Dictionary) -> Dictionary:

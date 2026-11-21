@@ -153,10 +153,14 @@ func _refresh_display() -> void:
 			dist_text = "Dist: %.0fpx" % npc.global_position.distance_to(player.global_position)
 
 		var chest_status := "Peti: Ada"
-		if not is_instance_valid(buff_item) or not buff_item.get("is_available"):
+		if controller and not controller.get("item_available"):
 			chest_status = "Peti: [color=#e65f45]Diambil[/color]"
 
-		var buff_status := "Buff: " + ("[color=#6b9c62]Ya[/color]" if (controller and controller.get("has_npc_buff")) else "Tdk")
+		var buff_status := "Buff: Tdk"
+		if controller and controller.get("npc_buff_used"):
+			buff_status = "Buff: [color=#e6ad62]Dipakai[/color]"
+		elif controller and controller.get("has_npc_buff"):
+			buff_status = "Buff: [color=#6b9c62]Ya[/color]"
 		lines.append("[b][color=#62b4a9]Arena:[/color][/b] %s | %s | %s" % [dist_text, chest_status, buff_status])
 
 	content_label.text = "\n".join(lines)

@@ -65,7 +65,7 @@ func calculate_power(w: Dictionary, a: Dictionary, acc: Dictionary, npc_elem: St
 	if (npc_elem == "Fire" and mc_elem == "Nature") or \
 	   (npc_elem == "Nature" and mc_elem == "Water") or \
 	   (npc_elem == "Water" and mc_elem == "Fire"):
-		mult = 1.3
+		mult = 1.25
 	elif (npc_elem == "Nature" and mc_elem == "Fire") or \
 		 (npc_elem == "Water" and mc_elem == "Nature") or \
 		 (npc_elem == "Fire" and mc_elem == "Water"):

@@ -11,23 +11,16 @@ func _ready() -> void:
 	var mc_loadout_variant = game_state.mc_loadout if "mc_loadout" in game_state else {}
 	var mc_loadout: Dictionary = mc_loadout_variant if mc_loadout_variant is Dictionary else {}
 
-	var mc_total_stats := _total_stats(mc_loadout, game_state.mc_base_stats)
-	var mc_power: float = float(mc_total_stats["attack"] + mc_total_stats["defense"] + (mc_total_stats["hp"] - int(game_state.mc_base_stats.get("hp", 100))) * 0.5)
-
-	# 3. Jalankan AI Loadout
 	var mc_elem := str(mc_loadout.get("element", "Fire"))
 	if mc_elem.is_empty():
 		mc_elem = "Fire"
+
 	var npc_source_variant = game_state.npc_loadout if "npc_loadout" in game_state else {}
-	var npc_source: Dictionary = npc_source_variant if npc_source_variant is Dictionary else {}
-	var npc_elem := str(npc_source.get("element", "Water"))
+	var npc_loadout: Dictionary = npc_source_variant if npc_source_variant is Dictionary else {}
+	var npc_elem := str(npc_loadout.get("element", "Water"))
 	if npc_elem.is_empty():
 		npc_elem = "Water"
-	var npc_loadout: Dictionary = AILoadoutManager.run_simulated_annealing(mc_power, mc_elem, npc_elem)
-	npc_loadout["element"] = npc_elem
 
-	# 4. Simpan hasil AI ke game_state
-	game_state["npc_loadout"] = npc_loadout
 
 	# 5. Tampilkan ke UI
 	$CenterContainer/PanelContainer/Content/MCName.text = "MC  |  ELEMENT: " + mc_elem.to_upper()
@@ -36,22 +29,14 @@ func _ready() -> void:
 	_add_loadout_cards(npc_cards, npc_loadout)
 	$CenterContainer/PanelContainer/Content/StatsLabel.text = _make_stats_text(mc_loadout, npc_loadout)
 	var start_button := Button.new()
-	start_button.text = "MULAI PERTARUNGAN"
+	start_button.text = "LANJUT KE ARENA"
 	start_button.custom_minimum_size = Vector2(240.0, 48.0)
 	start_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	start_button.pressed.connect(_on_start_battle_pressed)
 	$CenterContainer/PanelContainer/Content.add_child(start_button)
 
 func _on_start_battle_pressed() -> void:
-	var battle_script := load("res://scripts/battle_ui.gd") as Script
-	if battle_script == null:
-		push_error("Could not load battle UI script.")
-		return
-	var battle_ui := battle_script.new() as CanvasLayer
-	if battle_ui == null:
-		push_error("Could not create battle UI.")
-		return
-	get_tree().root.add_child(battle_ui)
+	game_state.call("start_ai_planning_stage", self)
 	queue_free()
 
 func _set_map_background() -> void:

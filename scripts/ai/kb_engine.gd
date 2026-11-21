@@ -3,6 +3,8 @@ class_name KBEngine
 extends Node
 
 const KB_PATH := "res://data/npc_kb.json"
+const ELEMENT_SUPER_EFFECTIVE := 1.25
+const ELEMENT_NOT_VERY_EFFECTIVE := 0.85
 
 var fact_base: Array[String] = []
 var last_query: String = "GOAL"
@@ -177,9 +179,9 @@ func _effective_damage(percepts: Dictionary, attacker: Dictionary, defender: Dic
 	var relation := _element_relation(attacker_element, defender_element)
 	var multiplier := 1.0
 	if relation == "advantage":
-		multiplier = 1.5
+		multiplier = ELEMENT_SUPER_EFFECTIVE
 	elif relation == "disadvantage":
-		multiplier = 0.8
+		multiplier = ELEMENT_NOT_VERY_EFFECTIVE
 	return maxf(1.0, attack * multiplier - defense * 0.5)
 
 func _remove_duplicates() -> void:
