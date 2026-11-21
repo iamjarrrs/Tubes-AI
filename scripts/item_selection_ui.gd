@@ -166,7 +166,7 @@ func _on_item_selected(item_name: String) -> void:
 
 	if category == "accessory":
 		game_state.call("choose_npc_loadout")
-		game_state.call("start_ai_planning_stage", self)
+		game_state.call("replace_draft_ui", self, NEXT_SCENES["accessory"])
 		return
 
 	var next_scene_path: String = NEXT_SCENES[category]

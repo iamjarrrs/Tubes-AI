@@ -28,6 +28,7 @@ func _ready() -> void:
 
 	# 4. Simpan hasil AI ke game_state
 	game_state["npc_loadout"] = npc_loadout
+	
 
 	# 5. Tampilkan ke UI
 	$CenterContainer/PanelContainer/Content/MCName.text = "MC  |  ELEMENT: " + mc_elem.to_upper()
@@ -36,22 +37,14 @@ func _ready() -> void:
 	_add_loadout_cards(npc_cards, npc_loadout)
 	$CenterContainer/PanelContainer/Content/StatsLabel.text = _make_stats_text(mc_loadout, npc_loadout)
 	var start_button := Button.new()
-	start_button.text = "MULAI PERTARUNGAN"
+	start_button.text = "LANJUT KE ARENA"
 	start_button.custom_minimum_size = Vector2(240.0, 48.0)
 	start_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	start_button.pressed.connect(_on_start_battle_pressed)
 	$CenterContainer/PanelContainer/Content.add_child(start_button)
 
 func _on_start_battle_pressed() -> void:
-	var battle_script := load("res://scripts/battle_ui.gd") as Script
-	if battle_script == null:
-		push_error("Could not load battle UI script.")
-		return
-	var battle_ui := battle_script.new() as CanvasLayer
-	if battle_ui == null:
-		push_error("Could not create battle UI.")
-		return
-	get_tree().root.add_child(battle_ui)
+	game_state.call("start_ai_planning_stage", self)
 	queue_free()
 
 func _set_map_background() -> void:
