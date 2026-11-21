@@ -1,5 +1,7 @@
 extends CharacterBody2D
 
+signal navigation_target_reached
+
 const SPEED = 220.0
 var player: Node2D = null
 var astar_grid := AStarGrid2D.new()
@@ -9,6 +11,9 @@ var current_path: PackedVector2Array = []
 var path_index := 0
 var last_target_id := Vector2i(2147483647, 2147483647)
 var needs_repath := true
+var planner_controlled := false
+var planner_target_position := Vector2.ZERO
+var planner_target_active := false
 
 @onready var anim: AnimatedSprite2D = $AnimatedSprite2D
 
@@ -128,10 +133,12 @@ func find_spawn_position(target_position: Vector2) -> Vector2:
 			return best_position
 	return desired_position
 
-func _physics_process(_delta):
+func _physics_process(delta: float) -> void:
+	if planner_controlled:
+		_process_planner_navigation(delta)
+		return
 	if not player:
 		return
-
 	var target_id := _find_nearest_walkable_id(_world_to_grid_id(player.global_position))
 	if needs_repath or target_id != last_target_id or current_path.is_empty():
 		last_target_id = target_id
@@ -142,34 +149,18 @@ func _physics_process(_delta):
 		current_path = astar_grid.get_point_path(start_id, target_id)
 		needs_repath = false
 		queue_redraw()
-
-	var direction = Vector2.ZERO
-
-	if current_path.size() > 0:
-		while path_index < current_path.size() - 1 and global_position.distance_to(current_path[path_index]) < maxf(5.0, SPEED * _delta * 1.5):
-			path_index += 1
-		var waypoint := current_path[path_index]
-		var distance_to_waypoint := global_position.distance_to(waypoint)
-		if distance_to_waypoint <= SPEED * _delta:
-			global_position = waypoint
-			if path_index < current_path.size() - 1:
-				path_index += 1
-				waypoint = current_path[path_index]
-			distance_to_waypoint = global_position.distance_to(waypoint)
-		direction = global_position.direction_to(waypoint)
-		queue_redraw()
-	else:
+	if current_path.is_empty():
 		velocity = Vector2.ZERO
 		anim.stop()
 		return
-
+	while path_index < current_path.size() - 1 and global_position.distance_to(current_path[path_index]) < maxf(5.0, SPEED * delta * 1.5):
+		path_index += 1
+	var direction := global_position.direction_to(current_path[path_index])
 	velocity = direction * SPEED
-	
 	if direction != Vector2.ZERO:
 		update_npc_animation(direction)
 	else:
 		anim.stop()
-
 	move_and_slide()
 	if get_slide_collision_count() > 0:
 		var blocked_id := _world_to_grid_id(global_position + direction * tile_size)
@@ -179,7 +170,67 @@ func _physics_process(_delta):
 		needs_repath = true
 		current_path.clear()
 		velocity = Vector2.ZERO
+	queue_redraw()
+
+func begin_planner_control() -> void:
+	planner_controlled = true
+	planner_target_active = false
+	current_path.clear()
+	velocity = Vector2.ZERO
+	needs_repath = true
+	queue_redraw()
+
+func set_planner_target(target_position: Vector2) -> void:
+	var next_target_id := _world_to_grid_id(target_position)
+	var current_target_id := _world_to_grid_id(planner_target_position)
+	if planner_target_active and next_target_id == current_target_id:
+		planner_target_position = target_position
+		return
+	planner_target_position = target_position
+	planner_target_active = true
+	needs_repath = true
+	queue_redraw()
+
+func stop_planner_navigation() -> void:
+	planner_target_active = false
+	current_path.clear()
+	velocity = Vector2.ZERO
+	if is_instance_valid(anim):
+		anim.stop()
+	queue_redraw()
+
+func _process_planner_navigation(delta: float) -> void:
+	if not planner_target_active:
+		velocity = Vector2.ZERO
+		return
+	if global_position.distance_to(planner_target_position) <= 20.0:
+		stop_planner_navigation()
+		navigation_target_reached.emit()
+		return
+	var target_id := _find_nearest_walkable_id(_world_to_grid_id(planner_target_position))
+	if needs_repath or target_id != last_target_id or current_path.is_empty():
+		last_target_id = target_id
+		path_index = 0
+		var start_id := _world_to_grid_id(global_position)
+		if astar_grid.is_point_solid(start_id):
+			start_id = _find_nearest_walkable_id(start_id)
+		current_path = astar_grid.get_point_path(start_id, target_id)
+		needs_repath = false
 		queue_redraw()
+	if current_path.is_empty():
+		velocity = Vector2.ZERO
+		return
+	while path_index < current_path.size() - 1 and global_position.distance_to(current_path[path_index]) < maxf(5.0, SPEED * delta * 1.5):
+		path_index += 1
+	var direction := global_position.direction_to(current_path[path_index])
+	velocity = direction * SPEED
+	update_npc_animation(direction)
+	move_and_slide()
+	if get_slide_collision_count() > 0:
+		needs_repath = true
+		current_path.clear()
+		velocity = Vector2.ZERO
+	queue_redraw()
 
 func _find_nearest_walkable_id(origin: Vector2i) -> Vector2i:
 	var region := astar_grid.region

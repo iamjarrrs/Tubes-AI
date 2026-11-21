@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bity6g08a7qyk"
-path="res://.godot/imported/map_aqua.jpg-4cb23f613604a85b46cd5529a9be1372.ctex"
+path="res://.godot/imported/map_aqua.jpg-2b2ac72df06096f89fae67cf539d28a5.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/maps/map_aqua.jpg"
-dest_files=["res://.godot/imported/map_aqua.jpg-4cb23f613604a85b46cd5529a9be1372.ctex"]
+source_file="res://map/map_aqua.jpg"
+dest_files=["res://.godot/imported/map_aqua.jpg-2b2ac72df06096f89fae67cf539d28a5.ctex"]
 
 [params]
 

@@ -1,11 +1,13 @@
 extends SceneTree
 
-var engine: KBEngine
+const KB_ENGINE_SCRIPT := preload("res://scripts/ai/kb_engine.gd")
+
+var engine: Node
 var passed := 0
 var failed := 0
 
 func _init() -> void:
-	engine = KBEngine.new()
+	engine = KB_ENGINE_SCRIPT.new()
 	call_deferred("_run_tests")
 
 func _run_tests() -> void:
@@ -38,7 +40,7 @@ func _run_tests() -> void:
 
 func _run_case(label: String, percepts: Dictionary, expected: String) -> void:
 	engine.tell(percepts)
-	var answer := engine.ask("GOAL")
+	var answer: String = engine.ask("GOAL")
 	if answer == expected:
 		passed += 1
 		print("PASS: %s -> %s" % [label, answer])
@@ -48,8 +50,8 @@ func _run_case(label: String, percepts: Dictionary, expected: String) -> void:
 
 func _run_query_case(label: String, percepts: Dictionary, expected: String, rejected_query: String) -> void:
 	engine.tell(percepts)
-	var matched_answer := engine.ask(expected)
-	var rejected_answer := engine.ask(rejected_query)
+	var matched_answer: String = engine.ask(expected)
+	var rejected_answer: String = engine.ask(rejected_query)
 	if matched_answer == expected and rejected_answer.is_empty():
 		passed += 1
 		print("PASS: %s -> %s" % [label, matched_answer])

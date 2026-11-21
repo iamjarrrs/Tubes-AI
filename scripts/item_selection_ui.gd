@@ -37,11 +37,14 @@ func _ready() -> void:
 
 func _set_map_background() -> void:
 	var selected_map: String = str(game_state.get("selected_map")).to_lower()
-	var background_path := "res://assets/maps/map_aqua.jpg"
+	var map_file := "map_aqua.jpg"
 	if selected_map.contains("forest"):
-		background_path = "res://assets/maps/map_forest.jpg"
+		map_file = "map_forest.jpg"
 	elif selected_map.contains("volcano"):
-		background_path = "res://assets/maps/map_volcano.jpg"
+		map_file = "map_volcano.jpg"
+	var background_path := "res://assets/maps/" + map_file
+	if not ResourceLoader.exists(background_path):
+		background_path = "res://map/" + map_file
 	$MapBackground.texture = load(background_path)
 
 func _add_item_card(item_name: String, index: int) -> void:
@@ -133,16 +136,14 @@ func _get_artwork_path(item_name: String) -> String:
 		file_name = "Berseker Amulet"
 	var category_directory := ""
 	match category:
-		"weapon":
-			category_directory = "equipment/weapons"
-		"armor":
-			category_directory = "equipment/armor"
-		"accessory":
-			category_directory = "equipment/accessories"
-		_:
-			return ""
-	var path := "res://assets/%s/%s.jpg" % [category_directory, file_name]
-	return path if ResourceLoader.exists(path) else ""
+		"weapon": category_directory = "equipment/weapons"
+		"armor": category_directory = "equipment/armor"
+		"accessory": category_directory = "equipment/accessories"
+	var asset_path := "res://assets/%s/%s.jpg" % [category_directory, file_name]
+	if ResourceLoader.exists(asset_path):
+		return asset_path
+	var legacy_path := "res://%s/%s.jpg" % [category.capitalize(), file_name]
+	return legacy_path if ResourceLoader.exists(legacy_path) else ""
 
 func _get_item_color(item_name: String) -> Color:
 	for element in ELEMENT_COLORS:
@@ -165,6 +166,8 @@ func _on_item_selected(item_name: String) -> void:
 
 	if category == "accessory":
 		game_state.call("choose_npc_loadout")
+		game_state.call("start_ai_planning_stage", self)
+		return
 
 	var next_scene_path: String = NEXT_SCENES[category]
 	game_state.call("replace_draft_ui", self, next_scene_path)

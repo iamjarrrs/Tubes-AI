@@ -40,6 +40,13 @@ var npc_loadout: Dictionary = {
 	"accessory": {}
 }
 
+func _ready() -> void:
+	call_deferred("_init_display_mode")
+
+func _init_display_mode() -> void:
+	if DisplayServer.get_name() != "headless":
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+
 func reset_draft() -> void:
 	mc_loadout = {
 		"element": "",
@@ -56,6 +63,8 @@ func reset_draft() -> void:
 
 func start_map_draft(map_name: String, scene_path: String) -> void:
 	reset_draft()
+	mc_base_stats = {"attack": 30, "defense": 0, "hp": 100}
+	npc_base_stats = {"attack": 30, "defense": 0, "hp": 100}
 	selected_map = map_name
 	if not ResourceLoader.exists(scene_path):
 		push_error("Selected map scene does not exist: " + scene_path)
@@ -85,9 +94,7 @@ func start_map_draft(map_name: String, scene_path: String) -> void:
 	var map_sprite := _get_map_background(map_scene)
 	var camera := player.get_node_or_null("Camera2D") as Camera2D
 	if camera:
-		camera.zoom = Vector2.ONE
-		if map_sprite:
-			camera.global_position = map_sprite.global_position
+		_setup_arena_camera(camera, map_sprite)
 
 	var npc := load("res://Tiled_files/npc.tscn").instantiate() as CharacterBody2D
 	if npc == null:
@@ -96,7 +103,11 @@ func start_map_draft(map_name: String, scene_path: String) -> void:
 	npc.name = "BattleNPC"
 	npc.scale = player.scale
 	map_scene.add_child(npc)
-	var debug_overlay := load("res://scripts/gameplay_debug_overlay.gd").new() as CanvasLayer
+	var debug_overlay_scene := load("res://scenes/ui/ai_debug_overlay.tscn") as PackedScene
+	if debug_overlay_scene == null:
+		push_error("Could not load AI debug overlay scene.")
+		return
+	var debug_overlay := debug_overlay_scene.instantiate() as CanvasLayer
 	debug_overlay.name = "GameplayDebugOverlay"
 	map_scene.add_child(debug_overlay)
 	npc.global_position = npc.call("find_spawn_position", player.global_position)
@@ -120,6 +131,20 @@ func start_map_draft(map_name: String, scene_path: String) -> void:
 		return
 	element_ui.layer = 200
 	get_tree().root.add_child(element_ui)
+
+func ensure_arena_camera(player: Node, map_sprite: Sprite2D) -> void:
+	if player == null:
+		return
+	var camera := player.get_node_or_null("Camera2D") as Camera2D
+	if camera:
+		_setup_arena_camera(camera, map_sprite)
+
+func _setup_arena_camera(camera: Camera2D, map_sprite: Sprite2D) -> void:
+	if not is_instance_valid(camera):
+		return
+	camera.zoom = Vector2.ONE
+	if map_sprite:
+		camera.global_position = map_sprite.global_position
 
 func _get_map_background(map_scene: Node2D) -> Sprite2D:
 	for child in map_scene.get_children():
@@ -149,6 +174,22 @@ func replace_draft_ui(current_ui: Node, scene_path: String) -> void:
 	if next_ui is CanvasLayer:
 		next_ui.layer = 110
 	map_scene.add_child(next_ui)
+	current_ui.queue_free()
+
+func start_ai_planning_stage(current_ui: Node) -> void:
+	var scene_path := "res://scenes/entities/NPCController.tscn"
+	if not ResourceLoader.exists(scene_path):
+		push_error("NPC controller scene is missing: " + scene_path)
+		return
+	var packed_scene := load(scene_path) as PackedScene
+	if packed_scene == null:
+		push_error("NPC controller is not a PackedScene.")
+		return
+	var map_scene := get_tree().current_scene
+	if map_scene == null:
+		push_error("Cannot start AI planning because there is no active map.")
+		return
+	map_scene.add_child(packed_scene.instantiate())
 	current_ui.queue_free()
 
 func _instantiate_draft_ui(scene_path: String) -> Node:
@@ -230,3 +271,16 @@ func _score_npc_candidate(candidate: Dictionary, element: String) -> float:
 	if candidate["weapon"]["element"] == element and candidate["accessory"]["name"] == "Elemental Gem":
 		score += 3.0
 	return score
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_F11 or (event.keycode == KEY_ENTER and event.alt_pressed):
+			toggle_fullscreen()
+			get_viewport().set_input_as_handled()
+
+func toggle_fullscreen() -> void:
+	var mode := DisplayServer.window_get_mode()
+	if mode == DisplayServer.WINDOW_MODE_FULLSCREEN or mode == DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN:
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+	else:
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
