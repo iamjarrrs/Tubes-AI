@@ -11,24 +11,16 @@ func _ready() -> void:
 	var mc_loadout_variant = game_state.mc_loadout if "mc_loadout" in game_state else {}
 	var mc_loadout: Dictionary = mc_loadout_variant if mc_loadout_variant is Dictionary else {}
 
-	var mc_total_stats := _total_stats(mc_loadout, game_state.mc_base_stats)
-	var mc_power: float = float(mc_total_stats["attack"] + mc_total_stats["defense"] + (mc_total_stats["hp"] - int(game_state.mc_base_stats.get("hp", 100))) * 0.5)
-
-	# 3. Jalankan AI Loadout
 	var mc_elem := str(mc_loadout.get("element", "Fire"))
 	if mc_elem.is_empty():
 		mc_elem = "Fire"
+
 	var npc_source_variant = game_state.npc_loadout if "npc_loadout" in game_state else {}
-	var npc_source: Dictionary = npc_source_variant if npc_source_variant is Dictionary else {}
-	var npc_elem := str(npc_source.get("element", "Water"))
+	var npc_loadout: Dictionary = npc_source_variant if npc_source_variant is Dictionary else {}
+	var npc_elem := str(npc_loadout.get("element", "Water"))
 	if npc_elem.is_empty():
 		npc_elem = "Water"
-	var npc_loadout: Dictionary = AILoadoutManager.run_simulated_annealing(mc_power, mc_elem, npc_elem)
-	npc_loadout["element"] = npc_elem
 
-	# 4. Simpan hasil AI ke game_state
-	game_state["npc_loadout"] = npc_loadout
-	
 
 	# 5. Tampilkan ke UI
 	$CenterContainer/PanelContainer/Content/MCName.text = "MC  |  ELEMENT: " + mc_elem.to_upper()
