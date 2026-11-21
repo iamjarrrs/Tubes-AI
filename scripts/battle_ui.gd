@@ -29,9 +29,10 @@ var log_label: Label
 var action_row: HBoxContainer
 var result_row: HBoxContainer
 var result_label: Label
-var attack_button: Button
-var guard_button: Button
-var heal_button: Button
+var attack_button: TextureButton
+var guard_button: TextureButton
+var heal_button: TextureButton
+var heal_count_badge: Label
 
 func _ready() -> void:
 	layer = 230
@@ -47,6 +48,7 @@ func _ready() -> void:
 	npc_hp = npc_max_hp
 	_build_ui(mc_loadout, npc_loadout)
 	_refresh_health()
+	_set_actions_enabled(true)
 	status_label.text = "Giliran MC. Pilih serang atau bertahan."
 	log_label.text = "Pertarungan dimulai. MC mendapat giliran pertama."
 
@@ -106,15 +108,33 @@ func _build_ui(mc_loadout: Dictionary, npc_loadout: Dictionary) -> void:
 	action_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	action_row.add_theme_constant_override("separation", 12)
 	content.add_child(action_row)
-	attack_button = _button("Serang", Color("b85e43"))
+	attack_button = _action_button("attack")
 	attack_button.pressed.connect(_on_attack_pressed)
 	action_row.add_child(attack_button)
-	guard_button = _button("Bertahan", Color("4b91a0"))
+	guard_button = _action_button("defend")
 	guard_button.pressed.connect(_on_guard_pressed)
 	action_row.add_child(guard_button)
-	heal_button = _button("Heal (%d)" % MAX_HEALS, Color("4c9b79"))
+	heal_button = _action_button("heal")
 	heal_button.pressed.connect(_on_heal_pressed)
 	action_row.add_child(heal_button)
+	heal_count_badge = Label.new()
+	heal_count_badge.text = "%d/%d" % [MAX_HEALS, MAX_HEALS]
+	heal_count_badge.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	heal_count_badge.offset_left = -48.0
+	heal_count_badge.offset_top = 5.0
+	heal_count_badge.offset_right = -5.0
+	heal_count_badge.offset_bottom = 24.0
+	heal_count_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	heal_count_badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	heal_count_badge.add_theme_font_size_override("font_size", 10)
+	heal_count_badge.add_theme_color_override("font_color", Color("f4f1e8"))
+	heal_count_badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var badge_style := StyleBoxFlat.new()
+	badge_style.bg_color = Color("11191b", 0.9)
+	badge_style.set_corner_radius_all(3)
+	badge_style.set_content_margin_all(2)
+	heal_count_badge.add_theme_stylebox_override("normal", badge_style)
+	heal_button.add_child(heal_count_badge)
 
 	result_label = _label("", 25, Color("f0e9d2"))
 	result_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -125,10 +145,10 @@ func _build_ui(mc_loadout: Dictionary, npc_loadout: Dictionary) -> void:
 	result_row.add_theme_constant_override("separation", 12)
 	result_row.visible = false
 	content.add_child(result_row)
-	var rematch_button := _button("Main Lagi", Color("4c9b79"))
+	var rematch_button := _game_button("main_lagi")
 	rematch_button.pressed.connect(_on_rematch_pressed)
 	result_row.add_child(rematch_button)
-	var return_button := _button("Kembali ke Map", Color("51666a"))
+	var return_button := _game_button("kembali_ke_map")
 	return_button.pressed.connect(_on_return_pressed)
 	result_row.add_child(return_button)
 
@@ -371,7 +391,10 @@ func _set_actions_enabled(enabled: bool) -> void:
 	attack_button.disabled = not enabled
 	guard_button.disabled = not enabled
 	heal_button.disabled = not enabled or heals_used >= MAX_HEALS or mc_hp >= mc_max_hp
-	heal_button.text = "Heal (%d)" % (MAX_HEALS - heals_used)
+	attack_button.modulate = Color.WHITE if enabled else Color(0.55, 0.55, 0.55, 1.0)
+	guard_button.modulate = Color.WHITE if enabled else Color(0.55, 0.55, 0.55, 1.0)
+	heal_button.modulate = Color.WHITE if not heal_button.disabled else Color(0.55, 0.55, 0.55, 1.0)
+	heal_count_badge.text = "%d/%d" % [MAX_HEALS - heals_used, MAX_HEALS]
 
 func _battle_finished() -> bool:
 	return mc_hp <= 0 or npc_hp <= 0
@@ -407,20 +430,30 @@ func _label(text: String, font_size: int, color: Color) -> Label:
 	label.add_theme_color_override("font_color", color)
 	return label
 
-func _button(text: String, accent: Color) -> Button:
-	var button := Button.new()
-	button.text = text
-	button.custom_minimum_size = Vector2(180.0, 46.0)
-	button.add_theme_font_size_override("font_size", 17)
-	button.add_theme_color_override("font_color", Color("f4f1e8"))
-	var normal := StyleBoxFlat.new()
-	normal.bg_color = accent
-	normal.set_corner_radius_all(6)
-	normal.set_content_margin_all(8)
-	button.add_theme_stylebox_override("normal", normal)
-	var hover := normal.duplicate() as StyleBoxFlat
-	hover.bg_color = accent.lightened(0.16)
-	button.add_theme_stylebox_override("hover", hover)
+func _action_button(action_name: String) -> TextureButton:
+	var button := TextureButton.new()
+	button.custom_minimum_size = Vector2(180.0, 48.0)
+	button.focus_mode = Control.FOCUS_NONE
+	button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	button.ignore_texture_size = true
+	button.stretch_mode = TextureButton.STRETCH_SCALE
+	button.texture_normal = load("res://assets/maps/btn_%s_normal.png" % action_name) as Texture2D
+	button.texture_hover = load("res://assets/maps/btn_%s_hover.png" % action_name) as Texture2D
+	button.texture_pressed = load("res://assets/maps/btn_%s_pressed.png" % action_name) as Texture2D
+	button.texture_disabled = button.texture_normal
+	return button
+
+func _game_button(button_name: String) -> TextureButton:
+	var button := TextureButton.new()
+	button.custom_minimum_size = Vector2(240.0, 42.1)
+	button.focus_mode = Control.FOCUS_NONE
+	button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	button.ignore_texture_size = true
+	button.stretch_mode = TextureButton.STRETCH_SCALE
+	button.texture_normal = load("res://assets/maps/btn_%s_normal.png" % button_name) as Texture2D
+	button.texture_hover = load("res://assets/maps/btn_%s_hover.png" % button_name) as Texture2D
+	button.texture_pressed = load("res://assets/maps/btn_%s_pressed.png" % button_name) as Texture2D
+	button.texture_disabled = button.texture_normal
 	return button
 
 func _panel_style() -> StyleBoxFlat:

@@ -142,9 +142,21 @@ func ensure_arena_camera(player: Node, map_sprite: Sprite2D) -> void:
 func _setup_arena_camera(camera: Camera2D, map_sprite: Sprite2D) -> void:
 	if not is_instance_valid(camera):
 		return
-	camera.zoom = Vector2.ONE
-	if map_sprite:
-		camera.global_position = map_sprite.global_position
+	if not is_instance_valid(map_sprite) or map_sprite.texture == null:
+		camera.zoom = Vector2.ONE
+		return
+
+	var map_scale := map_sprite.global_scale.abs()
+	var map_size := Vector2(map_sprite.texture.get_size()) * map_scale
+	var viewport_size := camera.get_viewport().get_visible_rect().size
+	var cover_zoom := maxf(viewport_size.x / map_size.x, viewport_size.y / map_size.y) * 1.02
+	var map_rect := Rect2(map_sprite.global_position - map_size * 0.5, map_size)
+	camera.zoom = Vector2.ONE * cover_zoom
+	camera.limit_left = floori(map_rect.position.x)
+	camera.limit_top = floori(map_rect.position.y)
+	camera.limit_right = ceili(map_rect.end.x)
+	camera.limit_bottom = ceili(map_rect.end.y)
+	camera.global_position = map_sprite.global_position
 
 func _get_map_background(map_scene: Node2D) -> Sprite2D:
 	for child in map_scene.get_children():

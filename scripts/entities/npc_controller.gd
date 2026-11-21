@@ -2,6 +2,7 @@ extends Node
 
 const PLANNER_SCRIPT := preload("res://scripts/ai/automated_planner.gd")
 const KB_ENGINE_SCRIPT := preload("res://scripts/ai/kb_engine.gd")
+const DECISION_ENGINE_SCRIPT := preload("res://scripts/ai/decision_engine.gd")
 const BUFF_ITEM_SCRIPT := preload("res://scripts/entities/buff_item.gd")
 const ENGAGE_DISTANCE := 36.0
 
@@ -11,6 +12,9 @@ var npc: CharacterBody2D
 var game_state: Node
 var kb_engine
 var planner
+var decision_engine
+var decision_debug: Dictionary = {}
+var decision_action := "DIRECT_ENGAGE"
 var buff_item: Area2D
 var overlay: CanvasLayer
 var predicates: Array[String] = []
@@ -49,6 +53,7 @@ func _ready() -> void:
 
 	kb_engine = KB_ENGINE_SCRIPT.new()
 	planner = PLANNER_SCRIPT.new()
+	decision_engine = DECISION_ENGINE_SCRIPT.new()
 
 	var background := _get_map_background()
 	if game_state and game_state.has_method("ensure_arena_camera"):
@@ -75,6 +80,12 @@ func _process(_delta: float) -> void:
 	if not ai_started or transition_started or not is_instance_valid(npc):
 		return
 
+	if _update_decision_observation():
+		var previous_action := decision_action
+		_evaluate_decision()
+		if decision_action != previous_action and not has_npc_buff and not npc_buff_used:
+			_replan("Bayes update mengubah policy menjadi %s" % decision_action)
+
 	# Deteksi kedekatan dengan peti saat NPC menuju peti
 	if moving_step and current_step == "move_to_chest":
 		if is_instance_valid(buff_item) and item_available:
@@ -97,13 +108,11 @@ func _replan(reason: String) -> void:
 	npc_buff_used = false
 	var percepts := _build_percepts()
 	kb_engine.tell(percepts)
-	var previous_goal := goal_answer
 	goal_answer = kb_engine.ask("GOAL")
-
-	if previous_goal != goal_answer:
-		npc_sought_buff = goal_answer == "GOAL_Seek_Buff"
-
-	var goal := "item_used AND at_mc" if goal_answer == "GOAL_Seek_Buff" else "at_mc"
+	_update_decision_observation()
+	_evaluate_decision()
+	npc_sought_buff = decision_action == DECISION_ENGINE_SCRIPT.ACTION_SEEK_BUFF
+	var goal := "item_used AND at_mc" if npc_sought_buff else "at_mc"
 
 	if goal_answer == "GOAL_Direct_Engage" and not predicates.has("at_mc"):
 		predicates = ["at_start"]
@@ -141,19 +150,30 @@ func _replan(reason: String) -> void:
 	# SKENARIO 2: NPC TIDAK BUTUH BUFF (GOAL_Direct_Engage)
 	# Sesuai instruksi: NPC diam saja di tempatnya, membiarkan MC mengambil buff jika mau,
 	# dan menunggu pemain menekan [B] untuk memulai pertarungan.
-	if goal_answer == "GOAL_Direct_Engage" and not npc_sought_buff:
+	if decision_action == DECISION_ENGINE_SCRIPT.ACTION_DIRECT_ENGAGE and not has_npc_buff and not npc_buff_used:
 		npc.call("stop_planner_navigation")
 		moving_step = false
 		current_step = "standby_for_player"
 		awaiting_battle_start = true
-		_show_battle_prompt(
-			"⚔️ NPC SIAP BERTARUNG (DIRECT ENGAGE)",
-			"NPC merasa tidak butuh buff. Anda dapat mengambil buff di arena, lalu tekan [B] untuk Memulai Pertarungan."
-		)
+		if goal_answer == "GOAL_Seek_Buff":
+			_show_battle_prompt("RISIKO BUFF TERLALU TINGGI", "NPC memilih direct engage. Tekan [B] atau gunakan tombol untuk memulai pertarungan.")
+		else:
+			_show_battle_prompt("NPC SIAP BERTARUNG (DIRECT ENGAGE)", "NPC tidak membutuhkan buff. Tekan [B] atau gunakan tombol untuk memulai pertarungan.")
 		_update_overlay()
 		return
 
+	if decision_action == DECISION_ENGINE_SCRIPT.ACTION_SEEK_BUFF:
+		awaiting_battle_start = false
+		_dismiss_battle_prompt()
+
 	_run_next_step()
+
+func _dismiss_battle_prompt() -> void:
+	if is_instance_valid(battle_prompt):
+		battle_prompt.queue_free()
+	battle_prompt = null
+	prompt_title_label = null
+	prompt_subtitle_label = null
 
 func _run_next_step() -> void:
 	if transition_started or plan_index >= current_plan.size():
@@ -292,6 +312,33 @@ func _build_percepts() -> Dictionary:
 		"chest_available": item_available
 	}
 
+func _update_decision_observation() -> bool:
+	if decision_engine == null:
+		return false
+	if not item_available:
+		return decision_engine.observe("item_taken")
+	if not is_instance_valid(player) or not is_instance_valid(buff_item) or not is_instance_valid(npc):
+		return false
+
+	var mc_distance := player.global_position.distance_to(buff_item.global_position)
+	var npc_distance := npc.global_position.distance_to(buff_item.global_position)
+	var observation := "mc_medium"
+	if mc_distance + 40.0 < npc_distance:
+		observation = "mc_near"
+	elif mc_distance > npc_distance * 1.3 + 40.0:
+		observation = "mc_far"
+	return decision_engine.observe(observation)
+
+func _evaluate_decision() -> void:
+	if decision_engine == null:
+		return
+	decision_debug = decision_engine.decide(
+		goal_answer == "GOAL_Seek_Buff",
+		item_available,
+		has_npc_buff
+	)
+	decision_action = str(decision_debug.get("action", DECISION_ENGINE_SCRIPT.ACTION_DIRECT_ENGAGE))
+
 func _total_stats(loadout: Dictionary, base_stats: Dictionary) -> Dictionary:
 	var totals := {"attack": int(base_stats.get("attack", 30)), "defense": int(base_stats.get("defense", 0)), "hp": int(base_stats.get("hp", 100))}
 	for category in ["weapon", "armor", "accessory"]:
@@ -423,6 +470,11 @@ func _get_map_background() -> Sprite2D:
 func _update_overlay() -> void:
 	if overlay == null or not overlay.has_method("set_ai_debug_data"):
 		return
+	var current_decision_debug := decision_debug.duplicate(true)
+	if is_instance_valid(player) and is_instance_valid(buff_item):
+		current_decision_debug["mc_buff_distance"] = player.global_position.distance_to(buff_item.global_position)
+	if is_instance_valid(npc) and is_instance_valid(buff_item):
+		current_decision_debug["npc_buff_distance"] = npc.global_position.distance_to(buff_item.global_position)
 	overlay.call("set_ai_debug_data", {
 		"facts": kb_engine.get_facts() if kb_engine else [],
 		"query": kb_engine.last_query if kb_engine else "GOAL",
@@ -431,5 +483,6 @@ func _update_overlay() -> void:
 		"step": current_step,
 		"replanning": replanning_note,
 		"planner_status": planner.last_status if planner else "",
-		"planner_error": planner.last_error if planner else ""
+		"planner_error": planner.last_error if planner else "",
+		"decision": current_decision_debug
 	})

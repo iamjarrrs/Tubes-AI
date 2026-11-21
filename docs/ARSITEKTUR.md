@@ -2,7 +2,7 @@
 
 ## Ringkasan
 
-Game ini memilih map, membentuk loadout MC, membentuk loadout NPC melalui CSP dan Simulated Annealing, menampilkan Versus Preview, lalu menjalankan lapisan Knowledge-Based Agent dan Automated Planner sebelum pertarungan. Kondisi kode saat ini: NPC mendekati MC hingga sekitar 32 px sebelum draft dimulai, loadout dipilih melalui UI draft, Versus Preview membuka tahap AI, NPC memakai ramuan melalui satu jalur controller, dan battle dimulai melalui prompt `[B]` atau tombol prompt.
+Game ini memilih map, membentuk loadout MC, membentuk loadout NPC melalui CSP dan Simulated Annealing, menampilkan Versus Preview, lalu menjalankan Knowledge-Based Agent, Decision Engine, dan Automated Planner sebelum pertarungan. Decision Engine memakai MDP dan Value Iteration untuk memilih policy, serta memperbarui belief peluang NPC mendapatkan buff dari jarak relatif MC/NPC ke buff dan status ketersediaannya. Kondisi kode saat ini: NPC mendekati MC hingga sekitar 32 px sebelum draft dimulai, NPC memakai ramuan melalui satu jalur controller, dan battle dimulai melalui prompt `[B]` atau tombol prompt.
 
 ## BAGIAN YANG JANGAN DIUBAH TANPA ALASAN KUAT
 
@@ -12,6 +12,7 @@ Game ini memilih map, membentuk loadout MC, membentuk loadout NPC melalui CSP da
 - Perhitungan stat dan keputusan Minimax: jangan mengubah `BattleUI._total_stats()`, `_choose_npc_action_minimax()`, atau `_minimax_value()` di `scripts/battle_ui.gd`.
 - Key stat tetap `attack`, `defense`, dan `hp` pada percepts serta perhitungan battle.
 - Pengambilan buff NPC: aksi planner `take_item` memanggil `buff_item.collect(npc)` di `_execute_instant_action()`; sinyal `collected` diproses `_on_item_collected()` di `scripts/entities/npc_controller.gd`. Pengumpulan fisik dan sinyalnya ada di `scripts/entities/buff_item.gd`, `collect()` dan `_on_body_entered()`.
+- Decision Engine berada di `scripts/ai/decision_engine.gd`; integrasinya tidak mengubah kontrak KB. Action `DIRECT_ENGAGE` berarti NPC berhenti dan menunggu prompt/`[B]` sesuai perilaku saat ini, bukan memulai battle otomatis.
 
 ## 1. Alur game dari awal sampai battle
 
@@ -23,9 +24,10 @@ Game ini memilih map, membentuk loadout MC, membentuk loadout NPC melalui CSP da
 6. **Versus Preview.** `_ready()` di `scripts/versus_preview_ui.gd` membaca `game_state.mc_loadout` dan `game_state.npc_loadout` serta menampilkan kartu/stat. Versus Preview tidak menjalankan SA ulang. Tombol `LANJUT KE ARENA` memanggil `_on_start_battle_pressed()`, lalu `GameState.start_ai_planning_stage()` menutup fase draft/preview.
 7. **Memulai NPCController.** `start_ai_planning_stage()` di `scripts/game_state.gd` menambahkan scene `NPCController.tscn`. `_ready()` di `scripts/entities/npc_controller.gd` membuat `BuffItem`, mengaktifkan AI overlay, mengubah NPC menjadi planner-controlled, mengaktifkan gerak, dan memanggil `_replan()` pertama.
 8. **Knowledge-Based reasoning.** `_build_percepts()` di `NPCController` mengumpulkan element, stat akhir MC/NPC, dan `chest_available`. `_replan()` memanggil `KBEngine.tell(percepts)` lalu `KBEngine.ask("GOAL")`.
-9. **Automated Planner.** `_replan()` mengubah goal menjadi `item_used AND at_mc` untuk Seek Buff atau `at_mc` untuk Direct Engage, lalu memanggil `request_plan()` atau `update_request()` di `scripts/ai/automated_planner.gd`. Domain berasal dari `data/domain_planning.json`.
-10. **Perilaku saat ini.** Planner memetakan Direct Engage ke predicate `at_mc`, tetapi controller saat ini sengaja berhenti untuk Direct Engage dan menunggu `[B]`: `scripts/entities/npc_controller.gd`, blok `_replan()`. Untuk Seek Buff, NPC bergerak ke peti, mengambil dan memakai buff, lalu `_standby_after_buff()` menjadikannya standby dan menunggu `[B]`. MC mengambil ramuan lebih dulu memicu replan Direct Engage dan controller juga masuk jalur standby saat ini.
-11. **Memulai battle.** Battle dimulai melalui `_unhandled_input()` saat pemain menekan `[B]` atau melalui tombol prompt yang memanggil `_start_battle()` di `scripts/entities/npc_controller.gd`. `_start_battle()` mengunci gerak dan memuat `scripts/battle_ui.gd` sebagai CanvasLayer.
+9. **Decision Under Uncertainty.** `NPCController._replan()` memberikan hasil goal KB, ketersediaan item, dan status buff NPC ke `scripts/ai/decision_engine.gd`. Engine menghitung policy MDP dengan Value Iteration untuk state `need_buff_safe`, `need_buff_medium`, dan `need_buff_risky`, membandingkan expected utility `SEEK_BUFF` dan `DIRECT_ENGAGE`, serta memakai discount factor `0.9`.
+10. **Bayesian update.** Controller mengubah jarak relatif MC dan NPC ke buff menjadi observasi `mc_far`, `mc_medium`, atau `mc_near`. Belief hanya diperbarui ketika kategori observasi berubah agar frame berulang tidak dihitung sebagai evidence independen. Observasi `item_taken` menurunkan peluang sukses dan memaksa policy direct karena arena hanya memiliki satu buff.
+11. **Automated Planner dan perilaku.** Untuk policy `SEEK_BUFF`, controller meminta planner menyusun rencana `move_to_chest`, `take_item`, `use_item`, `move_to_mc`; controller menjadikan langkah `move_to_mc` sebagai standby setelah buff sesuai perilaku saat ini. Untuk policy `DIRECT_ENGAGE`, NPC berhenti dan menampilkan prompt. Controller meminta rencana ulang jika observasi mengubah action policy, serta menghapus prompt dan menonaktifkan guard battle jika policy kembali ke `SEEK_BUFF`. Jika NPC sudah mengambil buff, controller tetap meneruskan urutan `use_item` sebelum standby. Planner tetap berada di `scripts/ai/automated_planner.gd` dan domainnya di `data/domain_planning.json`.
+12. **Memulai battle.** Battle dimulai melalui `_unhandled_input()` saat pemain menekan `[B]` atau melalui tombol prompt yang memanggil `_start_battle()` di `scripts/entities/npc_controller.gd`. `_start_battle()` mengunci gerak dan memuat `scripts/battle_ui.gd` sebagai CanvasLayer.
 
 ## 2. Statistik
 
@@ -56,30 +58,47 @@ Game ini memilih map, membentuk loadout MC, membentuk loadout NPC melalui CSP da
 - Pencarian A* sinkron memakai predicate state dan aksi yang ditambah/dihapus.
 - `GOAL_Seek_Buff` memerlukan `item_used` dan `at_mc`; `GOAL_Direct_Engage` dipetakan ke `at_mc`.
 
-## 5. AI Debug Overlay
+## 5. Decision Engine
+
+- Implementasi: `scripts/ai/decision_engine.gd`; controller mengirim status kebutuhan buff, ketersediaan item, dan kepemilikan buff.
+- State keputusan: `need_buff_safe`, `need_buff_medium`, `need_buff_risky`, `buff_secured`, `buff_unavailable`, dan `direct_ready`.
+- Action dibandingkan: `SEEK_BUFF` dan `DIRECT_ENGAGE`. Nilai state dihitung dengan Value Iteration, maksimum 100 iterasi, toleransi `0.0001`, dan discount factor `0.9`.
+- Transition model eksplisit: `SEEK_BUFF` bercabang ke `buff_secured` sesuai belief dan ke state risiko berikutnya saat gagal; `DIRECT_ENGAGE` menuju `direct_ready`. Reward sukses buff `+10`, direct engage `-2` pada state butuh buff, dan reward gagal makin negatif pada state risiko lebih tinggi.
+- Prior belief keberhasilan mengambil buff adalah `0.65`. Evidence jarak memakai likelihood tetap untuk `mc_far`, `mc_medium`, dan `mc_near`; `item_taken` menjadi evidence kuat bahwa NPC tidak lagi dapat memperoleh buff.
+- Observasi jarak di controller membandingkan jarak MC dan NPC terhadap buff, bukan hanya jarak MC absolut. Bucket yang sama tidak dihitung berkali-kali setiap frame.
+- `DIRECT_ENGAGE` adalah keputusan strategi arena; untuk versi saat ini controller standby dan tetap menunggu tombol prompt/`[B]`. Planner tidak menentukan probabilitas atau utility.
+- Tes mandiri: `scripts/ai/test_decision_engine.gd` menguji update belief, pengulangan observasi, utility, pergantian policy saat MC mendekat, dan kondisi buff tersedia/tidak tersedia.
+- Tes UI overlay: `scripts/ai/test_ai_debug_overlay.gd` menguji dropdown, pergantian halaman tanpa campur data, tampilan model MDP, dan shortcut F3.
+
+## 6. AI Debug Overlay
 
 - Overlay aktif adalah `scripts/ui/ai_debug_overlay.gd`, node bernama `AIDebugOverlay` pada `scenes/ui/ai_debug_overlay.tscn`. F3 membuka/tutup panel lewat `_unhandled_input()`.
 - `scripts/game_state.gd`, `start_map_draft()`, membuat node `GameplayDebugOverlay` dari scene aktif tersebut. Perhatian: `scripts/gameplay_debug_overlay.gd` adalah overlay lama dan tidak dipakai sebagai overlay AI aktif saat ini.
 - Overlay membaca status Peti dari `controller.item_available` dan menampilkan Ada/Diambil.
 - Field Buff menampilkan `Dipakai` bila `npc_buff_used=true`, `Ya` bila `has_npc_buff=true`, dan `Tdk` jika tidak ada keduanya.
+- Bagian Decision menampilkan state, policy aktif, expected utility kedua action, belief keberhasilan, observasi terakhir, jarak MC/NPC ke buff, alasan keputusan, discount factor, dan jumlah iterasi Value Iteration.
 
-## 6. Cara menjalankan tes
+## 7. Cara menjalankan tes
 
 Dari root proyek:
 
 ```bash
 godot --headless --path . --script res://scripts/ai/test_kb_engine.gd
 godot --headless --path . --script res://scripts/ai/test_automated_planner.gd
+godot --headless --path . --script res://scripts/ai/test_decision_engine.gd
+godot --headless --path . --script res://scripts/ai/test_ai_debug_overlay.gd
 godot --headless --path . --script res://scripts/ai/test_tahap4_integration.gd
 ```
 
-Ekspektasi: KB Engine 5 lulus, Automated Planner 3 lulus, dan integration test lulus.
+Ekspektasi: KB Engine 5 lulus, Automated Planner 3 lulus, Decision Engine 25 lulus, AI Debug Overlay 12 lulus, dan integration test lulus.
 
-## 7. Aturan untuk AI assistant
+## 8. Aturan untuk AI assistant
 
 - Baca file dan fungsi yang terkait sebelum mengubah kode.
 - Ubah seminimal mungkin dan hanya sesuai permintaan.
 - Jangan mengubah kontrak KB, CSP/SA utama, perhitungan BattleUI, atau Minimax tanpa permintaan eksplisit.
+- Decision logic baru berada di `scripts/ai/decision_engine.gd`; jangan mencampur utility/policy ke dalam KB atau planner.
 - Jangan menambah pemanggilan SA kedua pada Versus Preview.
 - Pertahankan satu jalur pengambilan buff.
-- Jalankan ketiga tes setelah perubahan dan laporkan hasil apa adanya.
+- Pertahankan pemicu battle melalui `[B]`/tombol prompt.
+- Jalankan empat tes Godot setelah perubahan terkait dan laporkan hasil apa adanya.

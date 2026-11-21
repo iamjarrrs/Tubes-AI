@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ckbhbf5jmm2co"
-path="res://.godot/imported/Vampires2_Walk_with_shadow.png-3ac42bc8570bb46e63691d9f600c282d.ctex"
+path="res://.godot/imported/Vampires2_Walk_with_shadow.png-4c8fe6ecba70aed27fdb9dd8ee3bd68d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Player/Vampires2_Walk_with_shadow.png"
-dest_files=["res://.godot/imported/Vampires2_Walk_with_shadow.png-3ac42bc8570bb46e63691d9f600c282d.ctex"]
+source_file="res://assets/characters/Vampires2_Walk_with_shadow.png"
+dest_files=["res://.godot/imported/Vampires2_Walk_with_shadow.png-4c8fe6ecba70aed27fdb9dd8ee3bd68d.ctex"]
 
 [params]
 

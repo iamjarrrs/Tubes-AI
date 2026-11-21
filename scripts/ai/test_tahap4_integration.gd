@@ -24,7 +24,6 @@ func _init() -> void:
 	else:
 		print("  ✗ GAGAL: KBA expected GOAL_Seek_Buff, got ", kb_goal)
 		all_passed = false
-
 	# TEST 2: Automated Planner Sequence
 	print("\n[TEST 2] Menguji Automated Planner A* (Anggota 2)...")
 	var pl_script = load("res://scripts/ai/automated_planner.gd")
@@ -65,20 +64,22 @@ func _init() -> void:
 	else:
 		print("  ✗ GAGAL: Replan expected ['move_to_mc'], got ", replan)
 		all_passed = false
+	kb.free()
 
 	# TEST 4: Map Bawaan (Aqua) & Integrasi Node AI (Anggota 3)
 	print("\n[TEST 4] Memverifikasi Map Game (Aqua/Forest/Volcano) & Integrasi AI...")
 	var map_scene = load("res://scenes/maps/map_aqua.tscn")
 	var ctrl_scene = load("res://scenes/entities/NPCController.tscn")
 	var buff_script = load("res://scripts/entities/buff_item.gd")
-	var overlay_script = load("res://scripts/gameplay_debug_overlay.gd")
+	var decision_script = load("res://scripts/ai/decision_engine.gd")
+	var overlay_script = load("res://scripts/ui/ai_debug_overlay.gd")
 
-	if map_scene and ctrl_scene and buff_script and overlay_script:
+	if map_scene and ctrl_scene and buff_script and decision_script and overlay_script:
 		var map_inst = map_scene.instantiate()
 		var player_node = map_inst.find_child("Player", true, false)
 		if player_node:
 			print("  ✓ Map bawaan game (Aqua) berhasil dimuat dengan Player node!")
-			print("  ✓ NPCController, BuffItem, dan GameplayDebugOverlay terhubung ke map game!")
+			print("  ✓ NPCController, Decision Engine, BuffItem, dan AI Debug Overlay tersedia untuk arena!")
 		else:
 			print("  ✗ GAGAL: Player node tidak ditemukan di map_aqua.tscn")
 			all_passed = false
@@ -88,6 +89,7 @@ func _init() -> void:
 			"map": map_scene != null,
 			"controller": ctrl_scene != null,
 			"buff": buff_script != null,
+			"decision": decision_script != null,
 			"overlay": overlay_script != null
 		})
 		all_passed = false

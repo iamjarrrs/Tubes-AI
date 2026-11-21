@@ -28,10 +28,17 @@ func _ready() -> void:
 	_add_loadout_cards(mc_cards, mc_loadout)
 	_add_loadout_cards(npc_cards, npc_loadout)
 	$CenterContainer/PanelContainer/Content/StatsLabel.text = _make_stats_text(mc_loadout, npc_loadout)
-	var start_button := Button.new()
-	start_button.text = "LANJUT KE ARENA"
-	start_button.custom_minimum_size = Vector2(240.0, 48.0)
+	var start_button := TextureButton.new()
+	start_button.custom_minimum_size = Vector2(300.0, 53.0)
 	start_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	start_button.focus_mode = Control.FOCUS_NONE
+	start_button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	start_button.ignore_texture_size = true
+	start_button.stretch_mode = TextureButton.STRETCH_SCALE
+	start_button.texture_normal = load("res://assets/maps/btn_lanjut_ke_arena_normal.png") as Texture2D
+	start_button.texture_hover = load("res://assets/maps/btn_lanjut_ke_arena_hover.png") as Texture2D
+	start_button.texture_pressed = load("res://assets/maps/btn_lanjut_ke_arena_pressed.png") as Texture2D
+	start_button.texture_disabled = start_button.texture_normal
 	start_button.pressed.connect(_on_start_battle_pressed)
 	$CenterContainer/PanelContainer/Content.add_child(start_button)
 
