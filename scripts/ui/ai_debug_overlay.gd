@@ -100,8 +100,8 @@ func _position_panel() -> void:
 		return
 	var vp_width := get_viewport().get_visible_rect().size.x
 	var panel_width := minf(390.0, vp_width - 20.0)
-	panel.custom_minimum_size = Vector2(panel_width, 180.0)
-	content_label.custom_minimum_size = Vector2(panel_width - 76.0, 0.0)
+	panel.custom_minimum_size = Vector2(panel_width, 0.0)
+	content_label.custom_minimum_size = Vector2(panel_width - 64.0, 0.0)
 	toggle_btn.position = Vector2(maxf(10.0, vp_width - 48.0), 8.0)
 	panel.position = Vector2(maxf(10.0, vp_width - panel_width - 10.0), 48.0)
 	menu_panel.position = Vector2(maxf(10.0, vp_width - 158.0), 48.0)
@@ -306,18 +306,18 @@ func _append_arena(lines: Array[String]) -> void:
 	lines.append("[color=#62b4a9]Arena[/color]  %s" % "  |  ".join(details))
 
 func _panel_style() -> StyleBox:
-	var tex := load("res://assets/ui/debug_panel_frame.png") as Texture2D
+	var tex := load("res://assets/ui/debug_panel_frame1.png") as Texture2D
 	if tex:
 		var style := StyleBoxTexture.new()
 		style.texture = tex
-		style.texture_margin_left = 34.0
-		style.texture_margin_right = 34.0
-		style.texture_margin_top = 58.0
-		style.texture_margin_bottom = 58.0
-		style.content_margin_left = 38.0
-		style.content_margin_right = 38.0
-		style.content_margin_top = 58.0
-		style.content_margin_bottom = 58.0
+		style.texture_margin_left = 30.0
+		style.texture_margin_right = 30.0
+		style.texture_margin_top = 28.0
+		style.texture_margin_bottom = 28.0
+		style.content_margin_left = 32.0
+		style.content_margin_right = 32.0
+		style.content_margin_top = 34.0
+		style.content_margin_bottom = 32.0
 		return style
 
 	var style := StyleBoxFlat.new()
