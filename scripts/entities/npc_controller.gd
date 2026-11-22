@@ -480,6 +480,8 @@ func _update_overlay() -> void:
 		"query": kb_engine.last_query if kb_engine else "GOAL",
 		"answer": goal_answer,
 		"plan": current_plan,
+		"plan_index": plan_index,
+		"predicates": predicates.duplicate(),
 		"step": current_step,
 		"replanning": replanning_note,
 		"planner_status": planner.last_status if planner else "",

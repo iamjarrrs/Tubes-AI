@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dud04ctm2u4mu"
-path="res://.godot/imported/btn_defend_normal.png-cb50c8f7f0685229eadc46ba67c8abcf.ctex"
+path="res://.godot/imported/btn_defend_normal.png-0196a8dd068746194d676371fa1cb0e2.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/maps/btn_defend_normal.png"
-dest_files=["res://.godot/imported/btn_defend_normal.png-cb50c8f7f0685229eadc46ba67c8abcf.ctex"]
+source_file="res://map/btn_defend_normal.png"
+dest_files=["res://.godot/imported/btn_defend_normal.png-0196a8dd068746194d676371fa1cb0e2.ctex"]
 
 [params]
 

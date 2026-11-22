@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c8elcm5tekrbl"
-path="res://.godot/imported/btn_defend_hover.png-33f5053c2433c3f7ec40d5c507808cda.ctex"
+path="res://.godot/imported/btn_defend_hover.png-924c92b6045c29ab728d8a1fbf104f3e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/maps/btn_defend_hover.png"
-dest_files=["res://.godot/imported/btn_defend_hover.png-33f5053c2433c3f7ec40d5c507808cda.ctex"]
+source_file="res://map/btn_defend_hover.png"
+dest_files=["res://.godot/imported/btn_defend_hover.png-924c92b6045c29ab728d8a1fbf104f3e.ctex"]
 
 [params]
 

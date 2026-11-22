@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://d35tylc4laatc"
-path="res://.godot/imported/btn_defend_pressed.png-b8b1154d49f3c391057c69993a37f674.ctex"
+path="res://.godot/imported/btn_defend_pressed.png-7c69659aa5faba669996c9f852e0b3a8.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/maps/btn_defend_pressed.png"
-dest_files=["res://.godot/imported/btn_defend_pressed.png-b8b1154d49f3c391057c69993a37f674.ctex"]
+source_file="res://map/btn_defend_pressed.png"
+dest_files=["res://.godot/imported/btn_defend_pressed.png-7c69659aa5faba669996c9f852e0b3a8.ctex"]
 
 [params]
 
