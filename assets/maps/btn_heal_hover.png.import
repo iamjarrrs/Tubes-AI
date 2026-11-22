@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bwhr15qp5ecmi"
-path="res://.godot/imported/btn_heal_hover.png-ab607bc8e20e82bf49e7b19498b5b018.ctex"
+path="res://.godot/imported/btn_heal_hover.png-21cf39c57762639bc9991f3d7ee4e1e5.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/maps/btn_heal_hover.png"
-dest_files=["res://.godot/imported/btn_heal_hover.png-ab607bc8e20e82bf49e7b19498b5b018.ctex"]
+source_file="res://map/btn_heal_hover.png"
+dest_files=["res://.godot/imported/btn_heal_hover.png-21cf39c57762639bc9991f3d7ee4e1e5.ctex"]
 
 [params]
 

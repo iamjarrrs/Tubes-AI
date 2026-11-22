@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://cnwlby86g0d05"]
 
-[ext_resource type="Texture2D" uid="uid://ba3bx7u3rw1wx" path="res://assets/maps/map_forest.jpg" id="1_nl4m4"]
+[ext_resource type="Texture2D" uid="uid://ba3bx7u3rw1wx" path="res://map/map_forest.jpg" id="1_nl4m4"]
 [ext_resource type="PackedScene" uid="uid://gg00k7v2n4s0" path="res://Tiled_files/player.tscn" id="2_cpxtv"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_8i7ad"]
@@ -41,7 +41,7 @@ scale = Vector2(0.6183036, 0.6119792)
 texture = ExtResource("1_nl4m4")
 
 [node name="Player" parent="." unique_id=450160347 instance=ExtResource("2_cpxtv")]
-position = Vector2(140, 228)
+position = Vector2(233, 227)
 scale = Vector2(1, 1)
 
 [node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=644628951]

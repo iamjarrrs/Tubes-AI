@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b5t0wklh3oj1o"
-path="res://.godot/imported/btn_heal_pressed.png-6ddc8bcdd10258b9bcc52e9948eae714.ctex"
+path="res://.godot/imported/btn_heal_pressed.png-4e252c4e8dd1eab7de2bfcb5e85726c6.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/maps/btn_heal_pressed.png"
-dest_files=["res://.godot/imported/btn_heal_pressed.png-6ddc8bcdd10258b9bcc52e9948eae714.ctex"]
+source_file="res://map/btn_heal_pressed.png"
+dest_files=["res://.godot/imported/btn_heal_pressed.png-4e252c4e8dd1eab7de2bfcb5e85726c6.ctex"]
 
 [params]
 

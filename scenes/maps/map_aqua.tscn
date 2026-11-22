@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://mnk2d1b1phlu"]
 
-[ext_resource type="Texture2D" uid="uid://bity6g08a7qyk" path="res://assets/maps/map_aqua.jpg" id="1_r0k8f"]
+[ext_resource type="Texture2D" uid="uid://bity6g08a7qyk" path="res://map/map_aqua.jpg" id="1_r0k8f"]
 [ext_resource type="PackedScene" uid="uid://gg00k7v2n4s0" path="res://Tiled_files/player.tscn" id="2_rrlfo"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_8i7ad"]
@@ -38,7 +38,7 @@ scale = Vector2(0.8511904, 0.84244794)
 texture = ExtResource("1_r0k8f")
 
 [node name="Player" parent="." unique_id=450160347 instance=ExtResource("2_rrlfo")]
-position = Vector2(202, 333)
+position = Vector2(237, 340)
 scale = Vector2(1.5, 1.5)
 
 [node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=1042436779]

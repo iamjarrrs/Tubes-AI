@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://fr6xf5qgocnu"
-path="res://.godot/imported/btn_attack_hover.png-5872cd58a8646d6793aa94e33124df65.ctex"
+path="res://.godot/imported/btn_attack_hover.png-58153cadd18a0f0cbdf7f823c3587f7d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/maps/btn_attack_hover.png"
-dest_files=["res://.godot/imported/btn_attack_hover.png-5872cd58a8646d6793aa94e33124df65.ctex"]
+source_file="res://map/btn_attack_hover.png"
+dest_files=["res://.godot/imported/btn_attack_hover.png-58153cadd18a0f0cbdf7f823c3587f7d.ctex"]
 
 [params]
 

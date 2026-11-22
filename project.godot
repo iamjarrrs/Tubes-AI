@@ -26,7 +26,6 @@ AILoadoutManager="*res://scripts/ai/ai_loadout_manager.gd"
 window/size/viewport_width=1280
 window/size/viewport_height=720
 window/size/mode="fullscreen"
-window/size/resizable=true
 window/stretch/mode="viewport"
 window/stretch/aspect="expand"
 
